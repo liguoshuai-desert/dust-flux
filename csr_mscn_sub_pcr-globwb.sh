@@ -1,0 +1,51 @@
+#!/bin/bash
+
+#extract CSR by LandMask
+cdo setctomiss,0 CSR_GRACE_GRACE-FO_RL06_Mascons_v02_LandMask.nc CSR_GRACE_GRACE-FO_RL06_Mascons_v02_LandMask_setctomiss.nc
+cdo mul CSR_GRACE_GRACE-FO_RL06_Mascons_all-corrections_v02.nc CSR_GRACE_GRACE-FO_RL06_Mascons_v02_LandMask_setctomiss.nc CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02.nc
+cdo setmissval,-99999 CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02.nc CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval.nc
+#monmean CSR to ensure that one time-step each month
+cdo monmean CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval.nc CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval_monmean.nc
+#choose corresponding CSR months
+cdo seldate,2002-04-01,2014-12-31 CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval_monmean.nc CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval_monmean_seldate.nc
+
+
+#caculate TWS, the sum of soil moisture in all layers, accumulated snow, and plant canopy surface water (no considering in desert), unit converted into cm
+#cdo enssum e2o_univu_wrr2_glob15_mon_GroundMoist_1980-2014.nc e2o_univu_wrr2_glob15_mon_TotMoist_1980-2014.nc e2o_univu_wrr2_glob15_mon_SWE_1980-2014.nc e2o_univu_wrr2_glob15_mon_SurfStor_1980-2014.nc e2o_univu_wrr2_glob15_mon_TWS_1980-2014.nc
+
+#setmissval univu
+cdo setmissval,-99999 e2o_univu_wrr2_glob15_mon_TWS_1980-2014.nc e2o_univu_wrr2_glob15_setmissval_mon_TWS_1980-2014.nc
+cdo mulc,0.1 e2o_univu_wrr2_glob15_setmissval_mon_TWS_1980-2014.nc e2o_univu_wrr2_glob15_setmissval_mulc_mon_TWS_1980-2014.nc
+#calculate baseline 200401_200912
+cdo seldate,2004-01-01,2009-12-31 e2o_univu_wrr2_glob15_setmissval_mulc_mon_TWS_1980-2014.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_mon_TWS_2004-2009.nc
+cdo timmean e2o_univu_wrr2_glob15_setmissval_mulc_seldate_mon_TWS_2004-2009.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_timmean_mon_TWS_2004-2009.nc
+cdo sub e2o_univu_wrr2_glob15_setmissval_mulc_mon_TWS_1980-2014.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_timmean_mon_TWS_2004-2009.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_grace_mon_TWS_1980-2014.nc
+cdo setname,lwe_thickness e2o_univu_wrr2_glob15_setmissval_mulc_seldate_grace_mon_TWS_1980-2014.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_setname_grace_mon_TWS_1980-2014.nc
+#remapbil to CSR
+cdo remapbil,CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval_monmean.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_setname_grace_mon_TWS_1980-2014.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_setname_remapbil_CSR_grace_mon_TWS_1980-2014.nc
+
+#choose corresponding model months(2002-04-01，2017-06-01)
+cdo seldate,2002-04-01,2014-12-31 e2o_univu_wrr2_glob15_setmissval_mulc_seldate_setname_remapbil_CSR_grace_mon_TWS_1980-2014.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_setname_remapbil_CSR_grace_seldate_mon_TWS_200204-201412.nc
+
+#delete correspoding CSR months: delete,date=2002-06,2002-07,2003-06,2011-01,2011-06,2011-11,2012-05,2012-10,2013-03,2013-08,2013-09,2014-02,2014-07,2014-12,2015-05,2015-06,2015-10,2015-11,2016-04,2016-09,2016-10,2017-02
+cdo delete,date=2002-06-30,2002-07-31,2003-06-30,2011-01-31,2011-06-30,2011-11-30,2012-05-31,2012-10-31,2013-03-31,2013-08-31,2013-09-30,2014-02-28,2014-07-31,2014-12-31 e2o_univu_wrr2_glob15_setmissval_mulc_seldate_setname_remapbil_CSR_grace_seldate_mon_TWS_200204-201412.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_setname_remapbil_CSR_grace_seldate_deletedate_mon_TWS_200204-201412.nc
+
+
+#CSR sub model, corresponding to sediment changes
+cdo sub CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval_monmean_seldate.nc e2o_univu_wrr2_glob15_setmissval_mulc_seldate_setname_remapbil_CSR_grace_seldate_deletedate_mon_TWS_200204-201412.nc CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval_monmean_seldate_sub_univu.nc
+#covert from lwe_thickness to est_thickness, dividing by 1.58g/cm3
+cdo divc,1.58 CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval_monmean_seldate_sub_univu.nc CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval_monmean_seldate_sub_univu_divc.nc
+
+#sptilsel
+cdo splitsel,1 CSR_GRACE_GRACE-FO_RL06_Land_Mascons_all-corrections_v02_setmissval_monmean_seldate_sub_univu_divc.nc csr_mscn_sub_univu_
+
+
+
+
+
+
+
+
+
+
+done
