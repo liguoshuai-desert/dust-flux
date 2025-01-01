@@ -1,6 +1,9 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
-#author: Feihu Hu
+
+#Author: Feihu Hu and Guoshuai Li
+# Contact: GUOSHUAI Li  <liguoshuai@outlook.com> <liguoshuai@lzb.ac.cn>
+# Copyright (C) 2025
 
 import os
 import re
