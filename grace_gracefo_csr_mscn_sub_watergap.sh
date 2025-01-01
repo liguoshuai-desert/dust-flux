@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Author : Guoshuai Li
+# Contact: GUOSHUAI Li  <liguoshuai@outlook.com> <liguoshuai@lzb.ac.cn>
+# Copyright (C) 2025
+
 #对重投影后的CSR进行陆地掩膜
 cdo setctomiss,0 CSR_GRACE_GRACE-FO_RL06_Mascons_v02_LandMask_sellonlatbox.nc CSR_GRACE_GRACE-FO_RL06_Mascons_v02_LandMask_sellonlatbox_setctomiss.nc
 cdo mul CSR_GRACE_GRACE-FO_RL0602_Mascons_all-corrections_settaxis_sellonlatbox.nc CSR_GRACE_GRACE-FO_RL06_Mascons_v02_LandMask_sellonlatbox_setctomiss.nc CSR_GRACE_GRACE-FO_RL0602_Land_Mascons_all-corrections_settaxis_sellonlatbox.nc
